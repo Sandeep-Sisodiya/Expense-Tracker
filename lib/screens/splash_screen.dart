@@ -4,6 +4,7 @@ import 'package:animate_do/animate_do.dart';
 import '../providers/auth_provider.dart';
 import '../providers/expense_provider.dart';
 import 'login_screen.dart';
+import 'home_screen.dart';
 
 /// Splash screen with auto-login check and premium animation
 class SplashScreen extends StatefulWidget {
@@ -34,29 +35,24 @@ class _SplashScreenState extends State<SplashScreen>
 
   Future<void> _checkAuth() async {
     await Future.delayed(const Duration(milliseconds: 1800));
-
     if (!mounted) return;
 
     final authProvider = context.read<AuthProvider>();
     await authProvider.checkLoginStatus();
-
     if (!mounted) return;
 
     if (authProvider.isLoggedIn) {
-      // Load expenses for the logged-in user
       final expenseProvider = context.read<ExpenseProvider>();
       await expenseProvider.setUser(authProvider.currentUser!.id);
-
       if (!mounted) return;
+
       Navigator.pushReplacement(
         context,
         PageRouteBuilder(
-          pageBuilder: (_, animation, __) {
-            return FadeTransition(
-              opacity: animation,
-              child: const _HomeScreenProxy(),
-            );
-          },
+          pageBuilder: (_, animation, __) => FadeTransition(
+            opacity: animation,
+            child: const HomeScreen(),
+          ),
           transitionDuration: const Duration(milliseconds: 600),
         ),
       );
@@ -64,12 +60,10 @@ class _SplashScreenState extends State<SplashScreen>
       Navigator.pushReplacement(
         context,
         PageRouteBuilder(
-          pageBuilder: (_, animation, __) {
-            return FadeTransition(
-              opacity: animation,
-              child: const LoginScreen(),
-            );
-          },
+          pageBuilder: (_, animation, __) => FadeTransition(
+            opacity: animation,
+            child: const LoginScreen(),
+          ),
           transitionDuration: const Duration(milliseconds: 600),
         ),
       );
@@ -128,12 +122,12 @@ class _SplashScreenState extends State<SplashScreen>
             FadeInUp(
               delay: const Duration(milliseconds: 600),
               duration: const Duration(milliseconds: 600),
-              child: Text(
+              child: const Text(
                 'Smart Expense',
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
-                  color: isDark ? Colors.white : Colors.white,
+                  color: Colors.white,
                   letterSpacing: -0.5,
                 ),
               ),
@@ -169,44 +163,5 @@ class _SplashScreenState extends State<SplashScreen>
         ),
       ),
     );
-  }
-}
-
-/// Proxy to import HomeScreen lazily to avoid circular imports
-class _HomeScreenProxy extends StatelessWidget {
-  const _HomeScreenProxy();
-
-  @override
-  Widget build(BuildContext context) {
-    // Deferred import via route
-    return const _DeferredHomeScreen();
-  }
-}
-
-class _DeferredHomeScreen extends StatelessWidget {
-  const _DeferredHomeScreen();
-
-  @override
-  Widget build(BuildContext context) {
-    // Navigate using dynamic import approach
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const _HomeScreenPlaceholder(),
-        ),
-      );
-    });
-    return const Scaffold(body: SizedBox.shrink());
-  }
-}
-
-class _HomeScreenPlaceholder extends StatelessWidget {
-  const _HomeScreenPlaceholder();
-
-  @override
-  Widget build(BuildContext context) {
-    // This will be replaced in the actual flow
-    return const Scaffold(body: Center(child: CircularProgressIndicator()));
   }
 }
